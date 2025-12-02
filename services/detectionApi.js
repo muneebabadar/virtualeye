@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://192.168.100.6:8000";
+import Constants from 'expo-constants';
+
+const API_BASE_URL = "http://10.20.3.30:8000";
 
 export const detectCurrency = async (imageUri, confidenceThreshold = 0.5) => {
   try {

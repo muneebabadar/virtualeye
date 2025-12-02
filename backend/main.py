@@ -5,6 +5,7 @@ import numpy as np
 from ultralytics import YOLO
 import uvicorn
 import traceback
+import os
 
 # Create FastAPI app
 app = FastAPI()
@@ -13,7 +14,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -29,7 +30,10 @@ async def log_requests(request: Request, call_next):
 
 # Load model
 print("Loading model...")
-model = YOLO(r"D:\Uni\Sem 7\Capstone\app_model_deploy\backend\best.pt")  
+BASE_DIR = os.path.dirname(__file__)  # directory where main.py is located
+MODEL_PATH = os.path.join(BASE_DIR, "best.pt")
+
+model = YOLO(MODEL_PATH)
 class_names = model.names
 print(f"Model loaded! Classes: {list(class_names.values())}")
 
