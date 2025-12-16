@@ -45,3 +45,19 @@ app-example
 
 __pycache__/
 *.py[cod]
+
+# Virtual environment
+venv/
+.env/
+
+# Python
+_pycache_/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
