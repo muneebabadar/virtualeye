@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import io
 from currency_detection import CurrencyDetector
 from object_detection import ObjectDetector
+from colour_detection import ColorDetector
 
 app = FastAPI(title="V-Eye API", description="Currency and Object Detection API")
 
@@ -19,6 +20,8 @@ app.add_middleware(
 # Initialize detectors
 currency_detector = CurrencyDetector('assets/best.pt')  # Your custom currency model
 object_detector = ObjectDetector('assets/yolov8n.pt')  # COCO pretrained model
+color_detector = ColorDetector()
+
 
 @app.get("/")
 async def root():
@@ -146,6 +149,52 @@ async def detect_objects_annotated(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@app.post("/detect-color")
+async def detect_color(file: UploadFile = File(...)):
+    """
+    Detect dominant colors in an uploaded image
+    Returns multiple dominant colors with percentages
+    """
+    try:
+        # Read image bytes
+        image_bytes = await file.read()
+        
+        # Detect colors
+        result = color_detector.detect_color(image_bytes, n_colors=3)
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/detect-color-simple")
+async def detect_color_simple(file: UploadFile = File(...)):
+    """
+    Detect single dominant color - optimized for real-time feedback
+    Faster processing for continuous camera feed
+    """
+    try:
+        # Read image bytes
+        image_bytes = await file.read()
+        
+        # Detect primary color
+        result = color_detector.detect_color_simple(image_bytes)
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 
 # Utility Endpoints
 
@@ -171,3 +220,4 @@ async def get_classes():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

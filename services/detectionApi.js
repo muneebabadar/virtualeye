@@ -1,74 +1,3 @@
-// import Constants from "expo-constants";
-
-// const API_BASE_URL = "http://192.168.1.5:8000";
-
-// // Reusable helper: upload image and return API result
-// const uploadImage = async (imageUri, confidenceThreshold) => {
-//   try {
-//     const formData = new FormData();
-
-//     const filename = imageUri.split("/").pop() || "photo.jpg";
-//     const ext = filename.split(".").pop() || "jpg";
-
-//     formData.append("file", {
-//       uri: imageUri,
-//       name: filename,
-//       type: `image/${ext}`,
-//     });
-
-//     const response = await fetch(`${API_BASE_URL}/detect/`, {
-//       method: "POST",
-//       body: formData,
-//       headers: {
-//         Accept: "application/json",
-//       },
-//     });
-
-//     if (!response.ok) {
-//       const msg = await response.text();
-//       throw new Error(`API Error: ${response.status} - ${msg}`);
-//     }
-
-//     return await response.json();
-//   } catch (err) {
-//     console.error("Detection Upload Error:", err);
-//     throw err;
-//   }
-// };
-
-// // Currency detection
-// export const detectCurrency = async (imageUri, confidenceThreshold = 0.5) => {
-//   console.log("Running currency detection");
-//   return uploadImage(imageUri, confidenceThreshold);
-// };
-
-// // Object detection (general YOLO)
-// export const detectObjects = async (imageUri, confidenceThreshold = 0.3) => {
-//   console.log("Running object detection");
-//   return uploadImage(imageUri, confidenceThreshold);
-// };
-
-// // API health
-// export const checkApiHealth = async () => {
-//   try {
-//     const response = await fetch(`${API_BASE_URL}/health`);
-//     if (!response.ok) return false;
-
-//     const data = await response.json();
-//     console.log("Health response:", data);
-
-//     // Check if both models are loaded
-//     const modelsLoaded = data.models_loaded?.currency_detector && data.models_loaded?.object_detector;
-//     return data.status === "healthy" && modelsLoaded;
-//   } catch (error) {
-//     console.error("Health Check Error:", error);
-//     return false;
-//   }
-// };
-
-
-// export { API_BASE_URL };
-
 
 import { Platform } from "react-native";
 
@@ -76,7 +5,7 @@ import { Platform } from "react-native";
 // 1. API Base URL
 // =====================
 // Make sure this matches your FastAPI server IP on the same network
-export const API_BASE_URL = "http://10.20.4.185:8000";
+export const API_BASE_URL = "http://192.168.1.15:8000";
 
 // =====================
 // 2. Helper: Upload Image
@@ -128,18 +57,53 @@ export const detectObjects = async (imageUri, confidence = 0.3) => {
   return uploadImage("/detect-objects", imageUri);
 };
 
+export const detectColor = async (imageUri) => {
+  return uploadImage("/detect-color-simple", imageUri);
+};
+
 // =====================
 // 4. Health Check
 // =====================
+// export const checkApiHealth = async () => {
+//   try {
+//     const response = await fetch(`${API_BASE_URL}/health`);
+//     if (!response.ok) return false;
+
+//     const data = await response.json();
+//     return data.status === "healthy";
+//   } catch (err) {
+//     console.error("Health Check Error:", err);
+//     return false;
+//   }
+// };
 export const checkApiHealth = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
-    if (!response.ok) return false;
+    console.log('Checking API health at:', `${API_BASE_URL}/health`);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    const response = await fetch(`${API_BASE_URL}/health`, {
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    console.log('Health check response status:', response.ok);
+    
+    if (!response.ok) {
+      console.log('Health check failed with status:', response.status);
+      return false;
+    }
 
     const data = await response.json();
+    console.log('Health check data:', data);
+    
     return data.status === "healthy";
   } catch (err) {
     console.error("Health Check Error:", err);
+    console.error("Error name:", err.name);
+    console.error("Error message:", err.message);
     return false;
   }
 };

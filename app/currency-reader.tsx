@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert
 } from "react-native";
-import * as Speech from 'expo-speech';
 import { detectCurrency, checkApiHealth } from '../services/detectionApi';
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAccessibleColors } from "@/hooks/useAccessibleColors";
@@ -92,6 +91,7 @@ const CurrencyReaderScreen = () => {
         quality: 0.8,
         base64: false,
         exif: false,
+        shutterSound: false
       });
 
       if (!photo || !photo.uri) {

@@ -14,7 +14,8 @@ emails==0.6
 
 # Utilities
 python-dateutil==2.8.2
-numpy==1.24.3
+# numpy==1.24.3
+numpy==1.26.4
 
 # Machine Learning / Computer Vision
 torch==2.1.2
@@ -23,5 +24,3 @@ Pillow==10.2.0
 timm==0.9.12
 opencv-python==4.8.1.78
 ultralytics==8.0.196
-
-
