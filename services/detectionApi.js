@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 // 1. API Base URL
 // =====================
 // Make sure this matches your FastAPI server IP on the same network
-export const API_BASE_URL = "http://192.168.1.15:8000";
+export const API_BASE_URL = "http://192.168.1.5:8000";
 
 // =====================
 // 2. Helper: Upload Image
