@@ -91,24 +91,19 @@
     "captureHint": "شخص کی مختلف زاویے سے تصویر لیتا ہے",
     "liveFeedLabel": "کیمرے کا براہِ راست منظر۔ اپنا چہرہ درمیان میں رکھیں۔"
   },
-  "objectDetection": {
-    "title": "اشیاء کی شناخت",
-    "screenIntro": "اشیاء کی شناخت کی اسکرین۔ کیمرہ استعمال کریں۔",
-    "allowCamera": "کیمرہ کی اجازت دیں",
-    "connected": "کنیکٹڈ",
-    "disconnected": "منقطع",
-    "scanning": "اسکین ہو رہا ہے",
-    "startDetection": "شناخت شروع کریں",
-    "stopDetection": "شناخت روکیں",
-    "detectionFailed": "شناخت ناکام ہو گئی",
-    "modes": "موڈز",
-    "navigateModes": "موڈز کی طرف جا رہے ہیں",
-    "languageEnglish": "زبان انگریزی ہے",
-    "refreshConnection": "کنکشن دوبارہ چیک کریں",
-    "apiNotConnected": "اے پی آئی منسلک نہیں ہے"
-
-
-},
+"objectNav": {
+  "title": "اشیاء کی رہنمائی",
+  "announcement": "اشیاء کی رہنمائی کی اسکرین۔ کیمرہ استعمال کریں۔",
+  "allowCamera": "کیمرہ کی اجازت دیں",
+  "scanning": "اسکین ہو رہا ہے",
+  "started": "اشیاء کی تلاش شروع ہو گئی",
+  "stopped": "اشیاء کی تلاش بند کر دی گئی",
+  "apiError": "سرور سے رابطہ ممکن نہیں",
+  "apiDisconnected": "سرور منسلک نہیں",
+  "personDetected": "آپ کے {{position}} میں ایک شخص موجود ہے، {{distance}}",
+  "unknownObject": "نامعلوم شے"
+}
+,
 "modal": {
   "title": "یہ ایک ماڈل ہے",
   "backHome": "ہوم اسکرین پر جائیں",

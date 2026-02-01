@@ -93,22 +93,20 @@
     "liveFeedLabel": "Front camera live feed. Position your face in the center."
   }
   ,
-   "objectDetection": {
-    "title": "Object Detection",
-    "screenIntro": "Object Detection Screen. Use camera to detect objects.",
-    "allowCamera": "Allow Camera Access",
-    "connected": "Connected",
-    "disconnected": "Disconnected",
-    "scanning": "Scanning...",
-    "startDetection": "Start Detection",
-    "stopDetection": "Stop Detection",
-    "detectionFailed": "Detection failed",
-    "modes": "Modes",
-    "navigateModes": "Navigating to modes selection",
-    "languageEnglish": "Language is English",
-    "refreshConnection": "Refresh connection status",
-    "apiNotConnected": "API not connected"
-  },
+ "objectNav": {
+  "title": "Object Navigation",
+  "announcement": "Object navigation screen. Use the camera to detect objects.",
+  "allowCamera": "Allow Camera Access",
+  "scanning": "Scanning...",
+  "started": "Object navigation started",
+  "stopped": "Object navigation stopped",
+  "apiError": "Cannot connect to detection server",
+  "apiDisconnected": "API not connected",
+  "personDetected": "Person detected on your {{position}}, {{distance}}",
+  "unknownObject": "Unknown object"
+},
+
+
   "modal": {
   "title": "This is a modal",
   "backHome": "Go to home screen",
