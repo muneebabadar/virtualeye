@@ -1,50 +1,38 @@
-# Welcome to your Expo app 👋
+Backend Setup (FastAPI)
+Go to backend:
+cd /Users/ashbahfaisal/Desktop/virtualeye/virtualeye/backend
+Create venv + activate:
+python3 -m venv .venv
+source .venv/bin/activate
+Install dependencies (matches your requirements.txt):
+pip install --upgrade pip
+pip install -r requirements.txt
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Run Backend
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+Test:
+curl http://127.0.0.1:8000/health
+4) Get Your Laptop IP (so phone can reach backend)
+macOS:
+ifconfig | grep "inet " | grep -v 127.0.0.1
+Look for something like:
+192.168.x.x
+10.x.x.x
+Example:
+inet 192.168.18.206
+5) Frontend Setup (Expo)
+Go to frontend folder (the one that has package.json):
+cd /Users/ashbahfaisal/Desktop/virtualeye/virtualeye/virtualeye
+Install:
+npm install
+Start Expo:
+npx expo start
+Scan QR using Expo Go.
 
-## Get started
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Update both:
+A) virtualeye/services/detectionApi.js
+export const API_BASE_URL = "http://192.168.18.206:8000"; // change to your IP
+B) virtualeye/services/personRecognitionApi.ts
+const BACKEND_IP = '192.168.18.206'; // change to your IP
+const BACKEND_PORT = '8000';
