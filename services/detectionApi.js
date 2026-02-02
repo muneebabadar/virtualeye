@@ -7,7 +7,7 @@ import { Platform } from "react-native";
 // Make sure this matches your FastAPI server IP on the same network
 
 //ASHBAH HOME IP:
-export const API_BASE_URL = "http://192.168.18.53:8000";
+export const API_BASE_URL = "http://10.20.2.229:8000";
 
 //ASHBAH WORK IP
 // export const API_BASE_URL = "http://10.220.94.36:8000";

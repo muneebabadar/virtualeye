@@ -4,6 +4,7 @@ import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAccessibleColors } from "@/hooks/useAccessibleColors";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -17,13 +18,15 @@ import {
 
 const PersonNameScreen = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { speak, hapticFeedback } = useAccessibility();
   const colors = useAccessibleColors();
   const params = useLocalSearchParams<{ count?: string; imageUris?: string }>();
+
   const [name, setName] = useState("");
   const inputRef = useRef<TextInput | null>(null);
 
-  // Parse image URIs from params
+  // Parse image URIs
   const imageUrisString = params.imageUris?.toString() || "[]";
   let imageUris: string[] = [];
   try {
@@ -33,22 +36,29 @@ const PersonNameScreen = () => {
   }
 
   useEffect(() => {
-    speak?.("Name entry screen. Enter the person's name to complete registration.", true);
+    speak?.(t("personName.announcement"), true);
   }, []);
 
   const handleContinue = () => {
     const trimmed = name.trim();
+
     if (!trimmed) {
-      speak?.("Please enter a name first", true);
+      speak?.(t("personName.emptyError"), true);
       hapticFeedback?.("error");
       inputRef.current?.focus?.();
       return;
     }
+
     hapticFeedback?.("medium");
-    speak?.(`Saving person named ${trimmed}. Proceeding to review.`, true);
+    speak?.(t("personName.saving", { name: trimmed }), true);
+
     router.replace({
       pathname: "/person-review",
-      params: { name: trimmed, count: params.count || "5", imageUris: JSON.stringify(imageUris) },
+      params: {
+        name: trimmed,
+        count: params.count || "5",
+        imageUris: JSON.stringify(imageUris),
+      },
     } as any);
   };
 
@@ -63,20 +73,20 @@ const PersonNameScreen = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* HEADER */}
         <View style={[styles.header, { backgroundColor: colors.primary }]}>
-          {/* FIX: Back button touch target >= 48x48 */}
           <Pressable
             onPress={() => {
               hapticFeedback?.("light");
-              speak?.("Going back to previous screen", true);
+              speak?.(t("common.back"), true);
               router.back();
             }}
             style={styles.backButton}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessible
-            accessibilityLabel="Go back"
-            accessibilityHint="Return to person capture screen"
             accessibilityRole="button"
+            accessibilityLabel={t("common.back")}
+            accessibilityHint={t("personName.backHint")}
           >
             <Feather name="arrow-left" size={28} color={colors.textInverse} />
           </Pressable>
@@ -86,35 +96,44 @@ const PersonNameScreen = () => {
             accessibilityRole="header"
             level={1}
           >
-            Person Registration
+            {t("personRegistration.title")}
           </AccessibleText>
         </View>
 
+        {/* CONTENT */}
         <View style={styles.content}>
-          <AccessibleText style={[styles.title, { color: colors.text }]} accessibilityRole="header" level={2}>
-            Photos Complete!
+          <AccessibleText
+            style={[styles.title, { color: colors.text }]}
+            accessibilityRole="header"
+            level={2}
+          >
+            {t("personName.title")}
           </AccessibleText>
 
-          {/* Visible label + association */}
           <AccessibleText
             nativeID="personNameLabel"
             style={[styles.subtitle, { color: colors.text }]}
             accessibilityRole="text"
           >
-            Enter name for this person
+            {t("personName.instruction")}
           </AccessibleText>
 
-          <View style={[styles.inputWrapper, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <View
+            style={[
+              styles.inputWrapper,
+              { borderColor: colors.border, backgroundColor: colors.card },
+            ]}
+          >
             <TextInput
               ref={inputRef}
               style={[styles.input, { color: colors.text }]}
-              placeholder="Enter name"
+              placeholder={t("personName.placeholder")}
               placeholderTextColor={colors.secondary}
               value={name}
               onChangeText={setName}
               accessibilityLabelledBy="personNameLabel"
-              accessibilityLabel="Person name"
-              accessibilityHint="Type the name of the person you just photographed"
+              accessibilityLabel={t("personName.placeholder")}
+              accessibilityHint={t("personName.instruction")}
               autoCapitalize="words"
               returnKeyType="done"
               onSubmitEditing={handleContinue}
@@ -122,10 +141,10 @@ const PersonNameScreen = () => {
           </View>
 
           <AccessibleButton
-            title="Continue"
+            title={t("personName.continue")}
             onPress={handleContinue}
-            accessibilityLabel="Continue"
-            accessibilityHint="Save the person's name and proceed to review"
+            accessibilityLabel={t("personName.continue")}
+            accessibilityHint={t("personReview.saveHint")}
             style={styles.button}
           />
         </View>
@@ -138,7 +157,6 @@ export default PersonNameScreen;
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-
   scrollContent: { paddingBottom: 40 },
 
   header: {
@@ -152,25 +170,52 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 24, fontWeight: "700" },
 
-  // FIX: 48x48 minimum
   backButton: {
     width: 48,
     height: 48,
-    minWidth: 48,
-    minHeight: 48,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  content: { flex: 1, justifyContent: "center", paddingHorizontal: 24, paddingTop: 30 },
-  title: { fontSize: 22, fontWeight: "700", textAlign: "center", marginBottom: 10 },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingTop: 30,
+  },
 
-  // FIX: avoid too-light contrast → use colors.text (not secondary)
-  subtitle: { fontSize: 18, textAlign: "center", marginBottom: 20 },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 10,
+  },
 
-  inputWrapper: { borderRadius: 14, borderWidth: 2, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 30 },
-  input: { height: 50, fontSize: 20 },
+  subtitle: {
+    fontSize: 18,
+    textAlign: "center",
+    marginBottom: 20,
+  },
 
-  button: { height: 80, borderRadius: 18, alignItems: "center", justifyContent: "center", marginHorizontal: 6 },
+  inputWrapper: {
+    borderRadius: 14,
+    borderWidth: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 30,
+  },
+
+  input: {
+    height: 50,
+    fontSize: 20,
+  },
+
+  button: {
+    height: 80,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 6,
+  },
 });

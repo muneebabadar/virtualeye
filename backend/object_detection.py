@@ -5,6 +5,7 @@ import io
 
 class ObjectDetector:
     def __init__(self, model_path='assets/yolov8n.pt'):
+
         """Initialize YOLOv8 object detector with COCO pretrained model"""
         self.model = YOLO(model_path)
         # COCO class names
@@ -30,32 +31,6 @@ class ObjectDetector:
         # Run inference
         results = self.model(image_np, conf=conf_threshold)
         
-        # # Process results without distance just tell the name of object
-        # detections = []
-        # for result in results:
-        #     boxes = result.boxes
-        #     for box in boxes:
-        #         # Get box coordinates
-        #         x1, y1, x2, y2 = box.xyxy[0].tolist()
-                
-        #         # Get confidence and class
-        #         confidence = float(box.conf[0])
-        #         class_id = int(box.cls[0])
-        #         class_name = self.class_names[class_id]
-                
-        #         detections.append({
-        #             'class': class_name,
-        #             'class_id': class_id,
-        #             'confidence': confidence,
-        #             'bbox': {
-        #                 'x1': x1,
-        #                 'y1': y1,
-        #                 'x2': x2,
-        #                 'y2': y2
-        #             }
-        #         })
-        
-        # # detect objects and also tell their relative position
         detections = []
         image_width, image_height = image.width, image.height
         image_area = image_width * image_height

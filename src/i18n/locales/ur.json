@@ -41,8 +41,13 @@
   "logoLabel": "وی آئی ایپلی کیشن لوگو",
   "getStarted": "شروع کریں",
   "languageChangedEnglish": "زبان انگریزی میں تبدیل کر دی گئی ہے",
-"languageChangedUrdu": "زبان اردو میں تبدیل کر دی گئی ہے"
-
+"languageChangedUrdu": "زبان اردو میں تبدیل کر دی گئی ہے",
+    "startDetection": "شناخت شروع کریں",
+    "stopDetection": "شناخت روکیں",
+    "apiErrorTitle": "کنکشن میں مسئلہ",
+    "apiErrorBody": "سرور سے رابطہ نہیں ہو سکا",
+    "apiNotConnected": "سرور سے رابطہ نہیں"
+  
   
   }
   ,
@@ -91,34 +96,42 @@
     "captureHint": "شخص کی مختلف زاویے سے تصویر لیتا ہے",
     "liveFeedLabel": "کیمرے کا براہِ راست منظر۔ اپنا چہرہ درمیان میں رکھیں۔"
   },
-"objectNav": {
-  "title": "اشیاء کی رہنمائی",
-  "announcement": "اشیاء کی رہنمائی کی اسکرین۔ کیمرہ استعمال کریں۔",
-  "allowCamera": "کیمرہ کی اجازت دیں",
-  "scanning": "اسکین ہو رہا ہے",
-  "started": "اشیاء کی تلاش شروع ہو گئی",
-  "stopped": "اشیاء کی تلاش بند کر دی گئی",
-  "apiError": "سرور سے رابطہ ممکن نہیں",
-  "apiDisconnected": "سرور منسلک نہیں",
-  "personDetected": "آپ کے {{position}} میں ایک شخص موجود ہے، {{distance}}",
-  "unknownObject": "نامعلوم شے"
-}
-,
-"modal": {
-  "title": "یہ ایک ماڈل ہے",
-  "backHome": "ہوم اسکرین پر جائیں",
-  "backHomeLabel": "ہوم اسکرین پر جائیں",
-  "backHomeHint": "ماڈل کو بند کرتا ہے اور ہوم اسکرین پر واپس لے جاتا ہے"
-},
-"setup": {
-    "languageSupport": "زبان کی سہولت",
-    "accessibilityOptions": "معاونتی سہولیات",
-    "highContrast": "ہائی کنٹراسٹ",
-    "enterEmail": "اپنا ای میل درج کریں",
-    "emailDescription": "ہم آپ کے ڈیٹا کو اسی ڈیوائس پر محفوظ کرنے کے لیے اس ای میل کا استعمال کریں گے۔",
-    "emailPlaceholder": "your.email@example.com",
-    "startApp": "وی آئی ای ایپلیکیشن شروع کی جا رہی ہے",
-    "announcement": "سیٹ اپ اسکرین۔ زبان اور رسائی کے اختیارات منتخب کریں۔"
+  "objectNav": {
+    "title": "اشیاء کی رہنمائی",
+    "announcement": "اشیاء کی رہنمائی کی اسکرین۔ کیمرہ استعمال کریں۔",
+    "allowCamera": "کیمرہ کی اجازت دیں",
+    "scanning": "اسکین ہو رہا ہے",
+    "started": "اشیاء کی تلاش شروع ہو گئی",
+    "stopped": "اشیاء کی تلاش بند کر دی گئی",
+    "apiError": "سرور سے رابطہ ممکن نہیں",
+    "apiDisconnected": "سرور منسلک نہیں",
+    "personDetected": "آپ کے {{position}} میں ایک شخص موجود ہے، {{distance}}",
+    "unknownObject": "نامعلوم شے"
+  }
+  ,
+  "modal": {
+    "title": "یہ ایک ماڈل ہے",
+    "backHome": "ہوم اسکرین پر جائیں",
+    "backHomeLabel": "ہوم اسکرین پر جائیں",
+    "backHomeHint": "ماڈل کو بند کرتا ہے اور ہوم اسکرین پر واپس لے جاتا ہے"
+  },
+  "color": {
+    "title": "رنگ کی شناخت",
+    "announcement": "رنگ کی شناخت کی اسکرین۔ رنگ معلوم کرنے کے لیے کیمرہ استعمال کریں۔",
+    "detected": "رنگ ہے {{color}}",
+    "failed": "رنگ کی شناخت ناکام ہو گئی",
+    "scanningStart": "رنگ اسکین کرنا شروع ہو گیا",
+    "scanningStop": "رنگ اسکین کرنا بند ہو گیا"
+  },
+  "setup": {
+      "languageSupport": "زبان کی سہولت",
+      "accessibilityOptions": "معاونتی سہولیات",
+      "highContrast": "ہائی کنٹراسٹ",
+      "enterEmail": "اپنا ای میل درج کریں",
+      "emailDescription": "ہم آپ کے ڈیٹا کو اسی ڈیوائس پر محفوظ کرنے کے لیے اس ای میل کا استعمال کریں گے۔",
+      "emailPlaceholder": "your.email@example.com",
+      "startApp": "وی آئی ای ایپلیکیشن شروع کی جا رہی ہے",
+      "announcement": "سیٹ اپ اسکرین۔ زبان اور رسائی کے اختیارات منتخب کریں۔"
 
   }
 }

@@ -61,3 +61,58 @@ _pycache_/
 # OS
 .DS_Store
 Thumbs.db
+
+# Virtual environments
+.venv/
+venv/
+backend/.venv/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# env files
+.env
+
+# macOS
+.DS_Store
+
+
+# Virtual envs
+.venv/
+venv/
+backend/.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Env
+.env
+
+# macOS
+.DS_Store
+
+# Virtual environments
+.venv/
+venv/
+backend/.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Env
+.env
+
+# macOS
+.DS_Store
+
+# Virtual envs
+backend/.venv/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store

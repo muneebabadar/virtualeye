@@ -43,8 +43,12 @@
     "logoLabel": "V-EYE Application Logo",
     "getStarted":"Get Started",
     "languageChangedEnglish": "Language set to English",
-    "languageChangedUrdu": "Language set to Urdu"
-
+    "languageChangedUrdu": "Language set to Urdu",
+    "startDetection": "Start Detection",
+    "stopDetection": "Stop Detection",
+    "apiErrorTitle": "API Not Connected",
+    "apiErrorBody": "Unable to connect to detection server",
+    "apiNotConnected": "API not connected"
   },
 
   "personReview": {
@@ -123,9 +127,15 @@
     "startApp": "Starting V-EYE application",
     "announcement": "Setup screen. Choose your language and accessibility preferences."
 
+  },
+  "color": {
+    "title": "Color Identification",
+    "announcement": "Color identification screen. Use camera to identify colors.",
+    "detected": "The color is {{color}}",
+    "failed": "Color detection failed",
+    "scanningStart": "Color scanning started",
+    "scanningStop": "Color scanning stopped"
   }
 
 
 }
-
-
