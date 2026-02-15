@@ -47,6 +47,10 @@ _ASSETS_DIR = os.path.join(_BACKEND_DIR, "assets")
 
 _NAV_MODEL_PATH = os.environ.get("NAV_MODEL_PATH", os.path.join(_ASSETS_DIR, "yolov8n.pt"))
 _CURRENCY_MODEL_PATH = os.environ.get("CURRENCY_MODEL_PATH", os.path.join(_ASSETS_DIR, "best.pt"))
+_CLOTHES_MODEL_PATH = os.environ.get(
+    "CLOTHES_MODEL_PATH",
+    os.path.join(_ASSETS_DIR, "deepfashion2_yolov8s-seg.pt")
+)
 
 
 # ================================================================
@@ -109,6 +113,7 @@ def estimate_distance(bbox: list, img_height: int, img_width: int) -> str:
 _nav_detector = None
 _color_detector = None
 _currency_detector = None
+_clothes_detector = None
 
 
 def _get_nav_detector():
@@ -135,6 +140,23 @@ def _get_color_detector():
         print("[color] Initializing ColorDetector")
         _color_detector = ColorDetector()
     return _color_detector
+
+def _get_clothes_detector():
+    """
+    DeepFashion2 YOLO model for clothing items (shirt, pants, etc.)
+    """
+    global _clothes_detector
+    if _clothes_detector is None:
+        from ultralytics import YOLO
+        if not os.path.exists(_CLOTHES_MODEL_PATH):
+            raise FileNotFoundError(
+                f"Clothes model not found at: {_CLOTHES_MODEL_PATH}\n"
+                f"Put deepfashion2_yolov8s-seg.pt inside: {_ASSETS_DIR}\n"
+                f"OR set CLOTHES_MODEL_PATH env var."
+            )
+        print(f"[clothes] Loading clothes YOLO from {_CLOTHES_MODEL_PATH}")
+        _clothes_detector = YOLO(_CLOTHES_MODEL_PATH)
+    return _clothes_detector
 
 
 def _get_currency_detector():
@@ -400,7 +422,10 @@ async def object_navigation_detect(file: UploadFile = File(...), confidence: flo
                 x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
                 cls_id = int(box.cls[0].cpu().numpy())
                 confv = float(box.conf[0].cpu().numpy())
-                cls_name = class_names.get(cls_id, str(cls_id))
+                # cls_name = class_names.get(cls_id, str(cls_id))
+                raw_cls = class_names.get(cls_id, str(cls_id))
+                cls_name = CLOTHES_CLASS_MAP.get(raw_cls, raw_cls)
+
 
                 x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
 
@@ -687,11 +712,125 @@ async def detect_objects_annotated(file: UploadFile = File(...), confidence: flo
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+# @app.post("/detect-objects-with-color")
+# async def detect_objects_with_color(file: UploadFile = File(...), confidence: float = 0.25):
+#     """
+#     Detect objects using YOLO and estimate color PER object (using bbox crop).
+#     Avoids background-dominant color issue.
+#     """
+#     try:
+#         image_bytes = await file.read()
+#         if not image_bytes:
+#             raise HTTPException(status_code=400, detail="Empty file")
+
+#         nparr = np.frombuffer(image_bytes, dtype=np.uint8)
+#         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+#         if image is None:
+#             raise HTTPException(status_code=400, detail="Invalid image")
+
+#         h, w = image.shape[:2]
+
+#         # 1) YOLO detect
+#         model = _get_nav_detector()
+#         results = model.predict(
+#             image,
+#             conf=confidence,
+#             iou=0.45,
+#             imgsz=640,
+#             verbose=False,
+#             device="cpu",
+#         )
+
+#         # COCO class names
+#         class_names = {}
+#         if hasattr(model, "model") and hasattr(model.model, "names"):
+#             class_names = model.model.names
+#         elif hasattr(model, "names"):
+#             class_names = model.names
+
+#         # 2) Color detector (your KMeans / mapping)
+#         detector = _get_color_detector()
+
+#         detections = []
+
+#         for res in results:
+#             for box in res.boxes:
+#                 x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+#                 cls_id = int(box.cls[0].cpu().numpy())
+#                 confv = float(box.conf[0].cpu().numpy())
+#                 cls_name = class_names.get(cls_id, str(cls_id))
+
+#                 x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
+
+#                 # clamp
+#                 x1 = max(0, min(w - 1, x1))
+#                 x2 = max(0, min(w - 1, x2))
+#                 y1 = max(0, min(h - 1, y1))
+#                 y2 = max(0, min(h - 1, y2))
+#                 if x2 <= x1 or y2 <= y1:
+#                     continue
+
+#                 # 3) Crop object region (IMPORTANT)
+#                 crop = image[y1:y2, x1:x2]
+#                 if crop.size == 0:
+#                     continue
+
+#                 # Optional: ignore very tiny crops (noise)
+#                 crop_area = (x2 - x1) * (y2 - y1)
+#                 if crop_area < 32 * 32:
+#                     continue
+
+#                 # 4) Run color on crop (NOT whole image)
+#                 # Your ColorDetector expects bytes, so encode crop to jpg bytes
+#                 ok, buf = cv2.imencode(".jpg", crop)
+#                 if not ok:
+#                     continue
+#                 crop_bytes = buf.tobytes()
+
+#                 color_result = detector.detect_color_simple(crop_bytes)
+#                 # expected: {"name": "...", "hex": "...", "rgb": {...}, "description": "..."} (based on your detector)
+#                 color_name = color_result.get("name") or color_result.get("color_name") or "Unknown"
+#                 color_hex = color_result.get("hex") or None
+
+#                 detections.append({
+#                     "class_name": cls_name,
+#                     "class_id": cls_id,
+#                     "confidence": confv,
+#                     "bbox": [x1, y1, x2, y2],
+#                     "color": {
+#                         "name": color_name,
+#                         "hex": color_hex,
+#                         "raw": color_result,
+#                     }
+#                 })
+
+#         # sort by confidence
+#         detections.sort(key=lambda d: d["confidence"], reverse=True)
+
+#         # Optional: Build simple TTS message for top 3 objects
+#         tts_messages = []
+#         for d in detections[:3]:
+#             tts_messages.append(f"{d['color']['name']} {d['class_name']}")
+
+#         return {
+#             "success": True,
+#             "mode": "object_color_detection",
+#             "count": len(detections),
+#             "detections": detections,
+#             "tts_messages": tts_messages,
+#         }
+
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         traceback.print_exc()
+#         raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/detect-objects-with-color")
 async def detect_objects_with_color(file: UploadFile = File(...), confidence: float = 0.25):
     """
-    Detect objects using YOLO and estimate color PER object (using bbox crop).
-    Avoids background-dominant color issue.
+    Detect CLOTHING using DeepFashion2 YOLO and estimate color PER object (using bbox crop).
+    Speaks like: "green shirt".
     """
     try:
         image_bytes = await file.read()
@@ -705,8 +844,8 @@ async def detect_objects_with_color(file: UploadFile = File(...), confidence: fl
 
         h, w = image.shape[:2]
 
-        # 1) YOLO detect
-        model = _get_nav_detector()
+        # ✅ 1) YOLO detect (USE CLOTHES MODEL NOW)
+        model = _get_clothes_detector()
         results = model.predict(
             image,
             conf=confidence,
@@ -716,16 +855,15 @@ async def detect_objects_with_color(file: UploadFile = File(...), confidence: fl
             device="cpu",
         )
 
-        # COCO class names
+        # clothes class names
         class_names = {}
         if hasattr(model, "model") and hasattr(model.model, "names"):
             class_names = model.model.names
         elif hasattr(model, "names"):
             class_names = model.names
 
-        # 2) Color detector (your KMeans / mapping)
+        # ✅ 2) Color detector
         detector = _get_color_detector()
-
         detections = []
 
         for res in results:
@@ -745,25 +883,22 @@ async def detect_objects_with_color(file: UploadFile = File(...), confidence: fl
                 if x2 <= x1 or y2 <= y1:
                     continue
 
-                # 3) Crop object region (IMPORTANT)
+                # crop object region
                 crop = image[y1:y2, x1:x2]
                 if crop.size == 0:
                     continue
 
-                # Optional: ignore very tiny crops (noise)
+                # ignore very tiny crops (noise)
                 crop_area = (x2 - x1) * (y2 - y1)
                 if crop_area < 32 * 32:
                     continue
 
-                # 4) Run color on crop (NOT whole image)
-                # Your ColorDetector expects bytes, so encode crop to jpg bytes
                 ok, buf = cv2.imencode(".jpg", crop)
                 if not ok:
                     continue
                 crop_bytes = buf.tobytes()
 
                 color_result = detector.detect_color_simple(crop_bytes)
-                # expected: {"name": "...", "hex": "...", "rgb": {...}, "description": "..."} (based on your detector)
                 color_name = color_result.get("name") or color_result.get("color_name") or "Unknown"
                 color_hex = color_result.get("hex") or None
 
@@ -779,17 +914,16 @@ async def detect_objects_with_color(file: UploadFile = File(...), confidence: fl
                     }
                 })
 
-        # sort by confidence
         detections.sort(key=lambda d: d["confidence"], reverse=True)
 
-        # Optional: Build simple TTS message for top 3 objects
+        # Build TTS message: "green shirt"
         tts_messages = []
         for d in detections[:3]:
             tts_messages.append(f"{d['color']['name']} {d['class_name']}")
 
         return {
             "success": True,
-            "mode": "object_color_detection",
+            "mode": "clothes_color_detection",
             "count": len(detections),
             "detections": detections,
             "tts_messages": tts_messages,
@@ -802,3 +936,18 @@ async def detect_objects_with_color(file: UploadFile = File(...), confidence: fl
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ================================================================
+# Clothing Class Mapping (DeepFashion2 → Human Friendly)
+# ================================================================
+CLOTHES_CLASS_MAP = {
+    "short_sleeve_top": "shirt",
+    "long_sleeve_top": "shirt",
+    "short_sleeve_outwear": "shirt",
+    "long_sleeve_outwear": "shirt",
+    "vest": "shirt",
+
+    "pants": "pants",
+    "shorts": "shorts",
+    "skirt": "skirt",
+    "dress": "dress",
+}
