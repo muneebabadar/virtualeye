@@ -1010,7 +1010,7 @@ _CUSTOM_MODEL_PATH = os.environ.get("CUSTOM_MODEL_PATH", os.path.join(_ASSETS_DI
 _COCO_MODEL_PATH   = os.environ.get("COCO_MODEL_PATH",   os.path.join(_ASSETS_DIR, "yolov8n.pt"))
 
 # currency model
-_CURRENCY_MODEL_PATH = os.environ.get("CURRENCY_MODEL_PATH", os.path.join(_ASSETS_DIR, "best.pt"))
+_CURRENCY_MODEL_PATH = os.environ.get("CURRENCY_MODEL_PATH", os.path.join(_ASSETS_DIR, "yolo26-obb-tflite.tflite"))
 
 # YOUR clothes model for clothes+color
 _CLOTHES_MODEL_PATH = os.environ.get("CLOTHES_MODEL_PATH", os.path.join(_ASSETS_DIR, "clothes_best_v4.pt"))

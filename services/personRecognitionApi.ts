@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 // =====================
 // Backend URL
 // =====================
-const BACKEND_IP = process.env.EXPO_PUBLIC_BACKEND_IP || "192.168.18.206";
+const BACKEND_IP = process.env.EXPO_PUBLIC_BACKEND_IP || "192.168.100.6";
 const BACKEND_PORT = process.env.EXPO_PUBLIC_BACKEND_PORT || "8000";
 export const BACKEND_URL = `http://${BACKEND_IP}:${BACKEND_PORT}`;
 

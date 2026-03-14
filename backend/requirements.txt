@@ -26,3 +26,4 @@ ultralytics==8.0.196
 facenet-pytorch==2.6.0
 pymongo==4.5.0
 pyttsx3==2.90
+tensorflow-cpu
