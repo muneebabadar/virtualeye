@@ -1011,9 +1011,9 @@ export const AccessibilityProvider = ({
     }
 
     try {
-      if (immediate) {
-        await Speech.stop();
-      }
+      // ← Always stop previous speech, not just when immediate=true
+      await Speech.stop();
+      setIsSpeaking(false);
 
       const langCode = isUrdu ? "ur-PK" : "en-US";
       const rate = isUrdu ? 0.75 : 0.95;

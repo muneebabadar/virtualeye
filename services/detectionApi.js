@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 // IMPORTANT:
 // 192.168.18.255 is a broadcast address -> it will ALWAYS fail.
 // Put your laptop's REAL IP here (the one running FastAPI).
-export const API_BASE_URL = "http://192.168.18.206:8000"; // <-- CHANGE THIS
+export const API_BASE_URL = "http://192.168.100.6:8000"; // <-- CHANGE THIS
 
 const buildUrl = (endpoint, params) => {
   const qs = new URLSearchParams();
@@ -131,7 +131,7 @@ export const detectClothesWithColor = async (imageUri, confidence = 0.3) => {
 export const checkApiHealth = async () => {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const response = await fetch(`${API_BASE_URL}/health`, {
       method: "GET",

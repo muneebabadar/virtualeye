@@ -2939,7 +2939,7 @@ from currency_detection import CurrencyDetector  # colleague uses this too
 # Colleague object detection
 from object_detection import ObjectDetector, WANTED_COCO_CLASSES
 
-
+import threading
 # ================================================================
 # App
 # ================================================================
@@ -2969,7 +2969,7 @@ _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 _ASSETS_DIR = os.path.join(_BACKEND_DIR, "assets")
 
 # colleague dual-model object detection
-_CUSTOM_MODEL_PATH = os.environ.get("CUSTOM_MODEL_PATH", os.path.join(_ASSETS_DIR, "object_detection_float16.tflite"))
+_CUSTOM_MODEL_PATH = os.environ.get("CUSTOM_MODEL_PATH", os.path.join(_ASSETS_DIR, "final_object_detection.tflite"))
 _COCO_MODEL_PATH   = os.environ.get("COCO_MODEL_PATH",   os.path.join(_ASSETS_DIR, "coco_yolo26n_int8.tflite"))
 
 # currency model
@@ -3789,7 +3789,11 @@ async def object_navigation_detect(file: UploadFile = File(...), confidence: flo
         if not ok:
             raise HTTPException(status_code=500, detail="Failed to encode image")
 
-        det_result = detector.detect_objects(buf.tobytes(), conf_threshold=confidence)
+        det_result = detector.detect_objects(
+            buf.tobytes(),
+            custom_conf=0.45,   # was 0.50 — raises bar for roti ki dalya etc.
+            coco_conf=0.55      # was 0.50 — raises bar for person specifically
+        )
         person_boxes: List[Tuple[int, int, int, int]] = []
 
         for d in det_result.get("detections", []):
@@ -3880,12 +3884,16 @@ async def object_navigation_detect(file: UploadFile = File(...), confidence: flo
                 msg = f"Person detected on your {position}, {distance}"
             tts_messages.append(msg)
 
-        for msg in tts_messages[:3]:
-            try:
-                tts.speak(msg)
-            except Exception:
-                pass
+        def _speak_async(messages):
+            for msg in messages[:3]:
+                try:
+                    tts.speak(msg)
+                except Exception:
+                    pass
 
+        threading.Thread(target=_speak_async, args=(tts_messages,), daemon=True).start()
+
+        # immediately returns without waiting for speech
         return {
             "success": True,
             "mode": "object_navigation",
@@ -4036,14 +4044,18 @@ def detect_color_simple(self, image_bytes, bbox=None, history_key="default"):
 # MODE 4: Object Detection
 # ================================================================
 @app.post("/detect-objects")
-async def detect_objects(file: UploadFile = File(...), confidence: float = 0.25):
+async def detect_objects(file: UploadFile = File(...), confidence: float = 0.45):
     try:
         contents = await file.read()
         if not contents:
             raise HTTPException(status_code=400, detail="Empty file")
 
         detector = _get_object_detector()
-        results = detector.detect_objects(contents, conf_threshold=confidence)
+        results = detector.detect_objects(
+        contents,
+        custom_conf=confidence,   # ← was conf_threshold=confidence
+        coco_conf=confidence      # ← add this
+    )
 
         return JSONResponse({"success": True, **results})
 
@@ -4055,14 +4067,18 @@ async def detect_objects(file: UploadFile = File(...), confidence: float = 0.25)
 
 
 @app.post("/detect-objects-annotated")
-async def detect_objects_annotated(file: UploadFile = File(...), confidence: float = 0.25):
+async def detect_objects_annotated(file: UploadFile = File(...), confidence: float = 0.45):
     try:
         contents = await file.read()
         if not contents:
             raise HTTPException(status_code=400, detail="Empty file")
 
         detector = _get_object_detector()
-        annotated = detector.detect_and_draw(contents, conf_threshold=confidence)
+        annotated = detector.detect_and_draw(
+        contents,
+        custom_conf=confidence,   # ← was conf_threshold=confidence
+        coco_conf=confidence      # ← add this
+    )
 
         return StreamingResponse(io.BytesIO(annotated), media_type="image/png")
 

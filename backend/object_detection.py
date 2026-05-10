@@ -334,6 +334,7 @@ import numpy as np
 from PIL import Image
 import io
 import tensorflow as tf
+import hashlib
 
 WANTED_COCO_CLASSES = {
     0: 'person',
@@ -341,22 +342,17 @@ WANTED_COCO_CLASSES = {
     57: 'couch',
     59: 'bed',
     60: 'dining table',
-    58: 'potted plant',
-    13: 'bench',
     61: 'toilet',
     71: 'sink',
     72: 'refrigerator',
     68: 'microwave',
     69: 'oven',
-    70: 'toaster',
     62: 'tv',
     63: 'laptop',
-    64: 'mouse',
     65: 'remote',
     66: 'keyboard',
     67: 'cell phone',
     39: 'bottle',
-    40: 'wine glass',
     41: 'cup',
     42: 'fork',
     43: 'knife',
@@ -364,42 +360,85 @@ WANTED_COCO_CLASSES = {
     45: 'bowl',
     73: 'book',
     74: 'clock',
-    75: 'vase',
     76: 'scissors',
     79: 'toothbrush',
     24: 'backpack',
-    28: 'suitcase',
 }
 
+# Fix — align with your actual classes
 PRIORITY_MAP = {
-    "stairs": 1,
-    "car": 1,
-    "bicycle": 1,
-    "person": 2,
-    "chair": 3,
-    "table": 3,
+    # Priority 1 — immediate danger, announce first
+    "stairs":           1,
+    "door":             1,
+    "gas cylinder":     1,
+
+    # Priority 2 — nearby people/obstacles
+    "person":           2,
+
+    # Priority 3 — common navigation objects
+    "bucket":           3,
+    "pedestal fan":     3,
+    "charpai":          3,
+    "water gallon":     3,
+
 }
+
+# Add this near your PRIORITY_MAP
+PER_CLASS_CONF = {
+    # COCO — keep high (lots of training data, very confident)
+    "person":           0.70,
+    "tawwa":            0.6,
+    # Custom — safety critical, keep low
+
+    "stairs":           0.35,
+    "door":             0.35,
+    "chair":            0.35,
+    "gas cylinder":     0.35,   # ← was 0.45, lower it
+
+    # Custom — was detecting late, lower these
+    "stove":            0.35,
+    "microwave":        0.35,
+    "refrigerator":     0.35,
+    
+    "water dispenser":  0.35,
+    "pateela":          0.38,
+    "hotpot":           0.38,
+    "kettle":           0.38,
+
+    # Custom — were false firing, keep high
+    "bowl":             0.70,
+    "roti ki dalya":    0.70,
+    "charpai":          0.65,
+    "hawan Dasta":      0.65,
+    
+}
+DEFAULT_CONF = 0.50
 
 CUSTOM_CLASS_NAMES = {
-    0: 'hawan Dasta',
-    1: 'pateela',
-    2: 'pressure cooker',
-    3: 'roti ki dalya',
-    4: 'tawwa',
-    5: 'tap',
-    6: 'muslim shower',
-    7: 'toilet',
-    8: 'bucket',
-    9: 'shower',
-    10: 'mug',
-    11: 'Kettle',
-    12: 'door',
-    13: 'hairbrush',
-    14: 'stairs',
-    15: 'water gallon',
-    16: 'waterdispenser'
+    0:  'bucket',
+    1:  'charpai',
+    2:  'door',
+    3:  'gas cylinder',
+    4:  'hairbrush',
+    5:  'hawan Dasta',
+    6:  'hotpot',
+    7:  'kettle',
+    8:  'mug',
+    9:  'muslim_shower',
+    10: 'pateela',
+    11: 'pedestal fan',
+    12: 'pressure cooker',
+    13: 'roti ki dalya',
+    14: 'shower',
+    15: 'sinc',
+    16: 'stairs',
+    17: 'stove',
+    18: 'tap',
+    19: 'tawwa',
+    20: 'toilet',
+    21: 'water dispenser',
+    22: 'water gallon',
 }
-
 
 class TFLiteModel:
     """Wrapper for a single TFLite model"""
@@ -442,20 +481,22 @@ class TFLiteModel:
 
 class ObjectDetector:
     def __init__(self,
-                 custom_model_path='assets/object_detection_float16.tflite',
+                 custom_model_path='assets/final_object_detection.tflite',
                  coco_model_path='assets/coco_yolo26n_int8.tflite'):
 
         self.custom_model = TFLiteModel(custom_model_path)
         self.coco_model = TFLiteModel(coco_model_path)
+        
+        # ── Frame hash caching (skip redundant inference) ────────────────────────
+        self._last_hash = None
+        self._last_result = None
 
     def _parse_detections(self, raw_output, class_names, conf_threshold,
-                           image_width, image_height, wanted_classes=None):
-        """Parse raw YOLO TFLite output into detection dicts"""
+                       image_width, image_height, wanted_classes=None):
         image_area = image_width * image_height
         detections = []
 
         for det in raw_output:
-            # det = [x1, y1, x2, y2, confidence, class_id]
             x1, y1, x2, y2, confidence, class_id = det
             class_id = int(class_id)
 
@@ -465,28 +506,46 @@ class ObjectDetector:
             if wanted_classes is not None and class_id not in wanted_classes:
                 continue
 
-            # Denormalize bbox (TFLite YOLO outputs normalized coords)
+            class_name = class_names.get(class_id, f"class_{class_id}")
+
+            # ── Per-class threshold override ──────────────────────────────────────
+            required_conf = PER_CLASS_CONF.get(class_name, DEFAULT_CONF)
+            if confidence < required_conf:
+                continue
+
+            # Denormalize
             x1 = float(x1) * image_width
             y1 = float(y1) * image_height
             x2 = float(x2) * image_width
             y2 = float(y2) * image_height
 
-            class_name = class_names.get(class_id, f"class_{class_id}")
             x_center = (x1 + x2) / 2
             box_area = (x2 - x1) * (y2 - y1)
 
             detections.append({
-                "class": class_name,
+                "class":      class_name,
                 "confidence": float(confidence),
-                "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2},
-                "position": horizontal_position(x_center, image_width),
-                "distance": estimate_distance(box_area, image_area),
-                "priority": PRIORITY_MAP.get(class_name, 4)
+                "bbox":       {"x1": x1, "y1": y1, "x2": x2, "y2": y2},
+                "position":   horizontal_position(x_center, image_width),
+                "distance":   estimate_distance(box_area, image_area),
+                "priority":   PRIORITY_MAP.get(class_name, 4)
             })
 
         return detections
 
-    def detect_objects(self, image_bytes, conf_threshold=0.25):
+    def detect_objects(self, image_bytes,
+                   custom_conf=0.45,
+                   coco_conf=0.50):
+
+        # ── Quick hash check — if frame barely changed, return cached result ─────
+        frame_hash = hashlib.md5(image_bytes[:2048]).hexdigest()  # only hash first 2KB
+        
+        if frame_hash == self._last_hash and self._last_result:
+            return self._last_result  # instant return, no inference
+
+        self._last_hash = frame_hash
+
+    # ── These lines must be inside the function ───────────────────────────────
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         image_np = np.array(image)
         image_width, image_height = image.width, image.height
@@ -497,33 +556,36 @@ class ObjectDetector:
         custom_output = self.custom_model.run(image_np)
         detections += self._parse_detections(
             custom_output, CUSTOM_CLASS_NAMES,
-            conf_threshold, image_width, image_height
+            custom_conf, image_width, image_height
         )
 
-        # Run COCO model (filtered to wanted classes)
+        # Run COCO model
         coco_output = self.coco_model.run(image_np)
         detections += self._parse_detections(
             coco_output, WANTED_COCO_CLASSES,
-            conf_threshold, image_width, image_height,
+            coco_conf, image_width, image_height,
             wanted_classes=set(WANTED_COCO_CLASSES.keys())
         )
 
         detections.sort(key=lambda d: d["priority"])
 
-        return {
+        result = {
             'detections': detections,
             'count': len(detections),
             'image_size': {'width': image_width, 'height': image_height}
         }
+        
+        self._last_result = result
+        return result
 
-    def detect_and_draw(self, image_bytes, conf_threshold=0.25):
+    def detect_and_draw(self, image_bytes, custom_conf=0.45, coco_conf=0.50):
         import cv2
 
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         image_np = np.array(image)
         image_width, image_height = image.width, image.height
 
-        result = self.detect_objects(image_bytes, conf_threshold)
+        result = self.detect_objects(image_bytes, custom_conf, coco_conf)
 
         # Draw boxes
         annotated = image_np.copy()
